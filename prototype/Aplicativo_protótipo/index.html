@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlantExpert — Protótipo de telas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest: #24422c;
+    --forest-dark: #182f1e;
+    --moss: #6b8f47;
+    --moss-light: #d8e4c8;
+    --cream: #f6f4ee;
+    --card: #eef2e7;
+    --ink: #202b1f;
+    --ink-soft: #57614f;
+    --line: #cdd8bf;
+    --amber: #b9852f;
+    font-family: 'Inter', sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--cream);
+    color: var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 32px 16px;
+  }
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; }
+
+  .phone{
+    width: 380px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(24,47,30,0.35);
+    border: 1px solid var(--line);
+  }
+  .topbar{
+    background: var(--forest);
+    color: #fff;
+    padding: 20px 22px 18px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+  }
+  .topbar .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .leaf{
+    width:26px; height:26px;
+    display:block;
+  }
+  .topbar h1{ font-size: 20px; font-weight:600; letter-spacing:0.2px; }
+  .back-btn{
+    background:none; border:none; color:#fff; opacity:0.85;
+    font-family:'Inter',sans-serif; font-size:14px; cursor:pointer;
+    padding:6px 4px;
+  }
+  .back-btn:disabled{ opacity:0; cursor:default; }
+
+  .progress{
+    display:flex; gap:6px; padding: 14px 22px 0;
+  }
+  .dot{
+    height:4px; flex:1; border-radius:2px; background: var(--line);
+    transition: background .25s ease;
+  }
+  .dot.active{ background: var(--moss); }
+
+  .screen{ padding: 22px 22px 26px; min-height: 430px; display:flex; flex-direction:column; }
+  .screen.hidden{ display:none; }
+
+  .eyebrow{ color: var(--ink-soft); font-size: 13px; margin-top:6px; }
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 18px;
+  }
+  .card h3{ font-size: 19px; margin-bottom:6px; }
+  .card p{ margin: 0 0 16px; color: var(--ink-soft); font-size:14px; line-height:1.5; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    background: var(--forest);
+    color:#fff; border:none; border-radius: 10px;
+    padding: 12px 18px; font-family:'Inter',sans-serif; font-weight:600;
+    font-size: 14px; cursor:pointer; width:100%;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .btn:hover{ background: var(--forest-dark); }
+  .btn:active{ transform: scale(0.98); }
+  .btn.secondary{
+    background: transparent; color: var(--forest); border: 1.5px solid var(--forest);
+  }
+  .btn.secondary:hover{ background: rgba(36,66,44,0.06); }
+
+  .question-list{ margin-top: 18px; display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; }
+  .question{
+    display:flex; align-items:center; justify-content:space-between;
+    background: var(--card); border:1px solid var(--line); border-radius: 12px;
+    padding: 13px 14px;
+  }
+  .question span{ font-size: 13.5px; line-height:1.35; padding-right:10px; }
+  .toggle{
+    display:flex; border-radius: 8px; overflow:hidden; border:1px solid var(--line); flex-shrink:0;
+  }
+  .toggle button{
+    border:none; background:#fff; color: var(--ink-soft);
+    font-size:12px; font-weight:600; padding:7px 11px; cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .toggle button.on-yes.selected{ background: var(--moss); color:#fff; }
+  .toggle button.on-no.selected{ background: #d98b6d; color:#fff; }
+
+  .footer-action{ margin-top: 18px; }
+
+  .result-title{ font-size: 21px; margin: 2px 0 4px; }
+  .badge{
+    display:inline-block; font-size:11.5px; font-weight:600; color: var(--forest);
+    background: var(--moss-light); padding: 4px 10px; border-radius: 999px; margin-bottom:10px;
+  }
+  .rec-list{ margin: 6px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 13.5px; line-height:1.6; }
+  .empty-state{ text-align:center; padding: 30px 6px; }
+  .empty-state .badge{ background:#f1e2c8; color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="topbar">
+    <button class="back-btn" id="backBtn" disabled>← Voltar</button>
+    <div class="brand">
+      <svg class="leaf" viewBox="0 0 24 24" fill="none"><path d="M4 20C4 12 10 4 20 4C20 12 14 20 4 20Z" fill="#a8c98a"/><path d="M4 20C7 14 11 10 20 4" stroke="#24422c" stroke-width="1.2"/></svg>
+      <h1>PlantExpert</h1>
+    </div>
+    <span style="width:56px"></span>
+  </div>
+
+  <div class="progress">
+    <div class="dot active" data-dot="0"></div>
+    <div class="dot" data-dot="1"></div>
+    <div class="dot" data-dot="2"></div>
+  </div>
+
+  <!-- Tela 1: inicial -->
+  <section class="screen" data-screen="0">
+    <span class="eyebrow">Tela inicial</span>
+    <h2 style="margin-top:4px; font-size:22px;">Cuide melhor das suas plantas</h2>
+    <div class="card">
+      <h3>Diagnóstico rápido</h3>
+      <p>Responda perguntas sobre sintomas, luz e rega para receber uma hipótese inicial e recomendações de cuidado.</p>
+      <button class="btn" onclick="goTo(1)">Iniciar diagnóstico</button>
+    </div>
+    <p style="margin-top:auto; padding-top:18px; color:var(--ink-soft); font-size:12px; text-align:center;">
+      O resultado é uma hipótese orientativa, não substitui avaliação profissional.
+    </p>
+  </section>
+
+  <!-- Tela 2: questionário -->
+  <section class="screen hidden" data-screen="1">
+    <span class="eyebrow">Questionário</span>
+    <h2 style="margin-top:4px; font-size:20px;">Sintomas e condições</h2>
+    <div class="question-list" id="questionList"></div>
+    <div class="footer-action">
+      <button class="btn" id="analyzeBtn" onclick="analisar()">Analisar</button>
+    </div>
+  </section>
+
+  <!-- Tela 3: resultado -->
+  <section class="screen hidden" data-screen="2">
+    <span class="eyebrow">Resultado</span>
+    <h2 style="margin-top:4px; font-size:20px;">Hipótese e recomendação</h2>
+    <div id="resultArea" style="margin-top:12px;"></div>
+    <div class="footer-action">
+      <button class="btn secondary" onclick="reiniciar()">Nova consulta</button>
+    </div>
+  </section>
+</div>
+
+<script>
+// Perguntas exibidas na tela 2 — chave do fato : texto da pergunta
+const PERGUNTAS = [
+  ["folhas_amareladas", "Há folhas amareladas?"],
+  ["folhas_secas", "Há folhas secas?"],
+  ["solo_muito_umido", "O solo permanece muito úmido?"],
+  ["solo_seco", "O solo está seco?"],
+  ["rega_frequente", "A rega é frequente?"],
+  ["pouca_luz", "A planta recebe pouca luz?"],
+  ["umidade_alta", "A umidade ambiente está alta?"],
+  ["manchas", "Há manchas nas folhas?"],
+  ["pequenos_insetos", "Há pequenos insetos na planta?"],
+  ["folhas_danificadas", "Há danos ou perfurações nas folhas?"],
+];
+
+// Base de conhecimento — mesmas regras do trabalho (R01 a R05)
+const REGRAS = [
+  {
+    id: "R01",
+    diagnostico: "Possível excesso de água",
+    recomendacoes: ["Reduzir a frequência de rega.", "Verificar a drenagem do vaso.", "Observar a evolução por alguns dias."],
+    condicao: f => f.folhas_amareladas && f.solo_muito_umido && f.rega_frequente,
+  },
+  {
+    id: "R02",
+    diagnostico: "Possível falta de água",
+    recomendacoes: ["Aumentar gradualmente a rega.", "Verificar a umidade do solo antes de regar novamente."],
+    condicao: f => f.folhas_secas && f.solo_seco && !f.rega_frequente,
+  },
+  {
+    id: "R03",
+    diagnostico: "Possível deficiência de luminosidade",
+    recomendacoes: ["Avaliar local com iluminação adequada.", "Evitar ambientes muito escuros por longos períodos."],
+    condicao: f => f.folhas_amareladas && f.pouca_luz,
+  },
+  {
+    id: "R04",
+    diagnostico: "Possível problema fúngico",
+    recomendacoes: ["Melhorar a ventilação do ambiente.", "Evitar molhar as folhas ao regar."],
+    condicao: f => f.manchas && f.umidade_alta,
+  },
+  {
+    id: "R05",
+    diagnostico: "Possível presença de pragas",
+    recomendacoes: ["Inspecionar a planta cuidadosamente.", "Avaliar métodos de controle adequado (ex.: sabão inseticida)."],
+    condicao: f => f.pequenos_insetos && f.folhas_danificadas,
+  },
+];
+
+let fatos = {};
+
+function renderPerguntas(){
+  const list = document.getElementById("questionList");
+  list.innerHTML = "";
+  PERGUNTAS.forEach(([chave, texto]) => {
+    if (fatos[chave] === undefined) fatos[chave] = false;
+    const row = document.createElement("div");
+    row.className = "question";
+    row.innerHTML = `
+      <span>${texto}</span>
+      <div class="toggle">
+        <button class="on-yes ${fatos[chave] ? 'selected' : ''}" data-chave="${chave}" data-val="true">SIM</button>
+        <button class="on-no ${!fatos[chave] ? 'selected' : ''}" data-chave="${chave}" data-val="false">NÃO</button>
+      </div>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const chave = btn.dataset.chave;
+      fatos[chave] = btn.dataset.val === "true";
+      renderPerguntas();
+    });
+  });
+}
+
+function analisar(){
+  const regrasAtivadas = REGRAS.filter(r => r.condicao(fatos));
+  const area = document.getElementById("resultArea");
+  if (regrasAtivadas.length === 0){
+    area.innerHTML = `
+      <div class="empty-state">
+        <span class="badge">Sem hipótese suficiente</span>
+        <p style="color:var(--ink-soft); font-size:14px; margin-top:6px;">
+          Não foi encontrada uma regra compatível com os dados informados.
+          Recomenda-se buscar avaliação especializada.
+        </p>
+      </div>`;
+  } else {
+    area.innerHTML = regrasAtivadas.map(r => `
+      <div class="card" style="margin-top:${r === regrasAtivadas[0] ? '0' : '14px'};">
+        <span class="badge">Compatibilidade: alta · ${r.id}</span>
+        <h3 class="result-title">${r.diagnostico}</h3>
+        <p style="margin-bottom:6px; font-weight:600; color:var(--ink); font-size:13.5px;">Recomendação:</p>
+        <ul class="rec-list">${r.recomendacoes.map(rec => `<li>${rec}</li>`).join("")}</ul>
+      </div>`).join("");
+  }
+  goTo(2);
+}
+
+function reiniciar(){
+  fatos = {};
+  renderPerguntas();
+  goTo(0);
+}
+
+function goTo(index){
+  document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
+  document.querySelector(`.screen[data-screen="${index}"]`).classList.remove("hidden");
+  document.querySelectorAll(".dot").forEach(d => d.classList.toggle("active", Number(d.dataset.dot) <= index));
+  document.getElementById("backBtn").disabled = index === 0;
+  document.getElementById("backBtn").onclick = () => goTo(Math.max(0, index - 1));
+  if (index === 1) renderPerguntas();
+}
+
+renderPerguntas();
+</script>
+</body>
+</html>
