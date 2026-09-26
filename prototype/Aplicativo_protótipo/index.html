@@ -107,23 +107,34 @@
   }
   .btn.secondary:hover{ background: rgba(36,66,44,0.06); }
 
-  .question-list{ margin-top: 18px; display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; }
-  .question{
-    display:flex; align-items:center; justify-content:space-between;
-    background: var(--card); border:1px solid var(--line); border-radius: 12px;
-    padding: 13px 14px;
+  /* Barra de progresso das perguntas (quantas faltam) */
+  .q-progress{ margin-top: 18px; }
+  .q-progress-top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom: 8px;
   }
-  .question span{ font-size: 13.5px; line-height:1.35; padding-right:10px; }
-  .toggle{
-    display:flex; border-radius: 8px; overflow:hidden; border:1px solid var(--line); flex-shrink:0;
+  .q-progress-label{ font-size: 12.5px; color: var(--ink-soft); font-weight:600; }
+  .q-progress-remaining{ font-size: 12.5px; color: var(--moss); font-weight:600; }
+  .q-progress-bar{
+    height: 8px; background: var(--line); border-radius: 999px; overflow:hidden;
   }
-  .toggle button{
-    border:none; background:#fff; color: var(--ink-soft);
-    font-size:12px; font-weight:600; padding:7px 11px; cursor:pointer;
-    font-family:'Inter',sans-serif;
+  .q-progress-fill{
+    height:100%; width:0%; background: var(--moss); border-radius:999px;
+    transition: width .3s ease;
   }
-  .toggle button.on-yes.selected{ background: var(--moss); color:#fff; }
-  .toggle button.on-no.selected{ background: #d98b6d; color:#fff; }
+
+  .question-single{ margin-top: 26px; flex:1; display:flex; flex-direction:column; }
+  .question-single .q-text{
+    font-size: 19px; font-weight:600; line-height:1.4; margin-bottom: 24px;
+  }
+  .q-answer-btns{ display:flex; flex-direction:column; gap:12px; margin-top:auto; }
+  .q-answer-btns button{
+    width:100%; padding:14px; border-radius:12px; border:1.5px solid var(--line);
+    background:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:15px;
+    cursor:pointer; color:var(--ink); transition: border-color .15s ease, background .15s ease;
+  }
+  .q-answer-btns button.yes:hover{ border-color: var(--moss); background: rgba(107,143,71,0.08); }
+  .q-answer-btns button.no:hover{ border-color: #d98b6d; background: rgba(217,139,109,0.08); }
 
   .footer-action{ margin-top: 18px; }
 
@@ -169,14 +180,22 @@
     </p>
   </section>
 
-  <!-- Tela 2: questionário -->
+  <!-- Tela 2: questionário (uma pergunta por vez) -->
   <section class="screen hidden" data-screen="1">
     <span class="eyebrow">Questionário</span>
     <h2 style="margin-top:4px; font-size:20px;">Sintomas e condições</h2>
-    <div class="question-list" id="questionList"></div>
-    <div class="footer-action">
-      <button class="btn" id="analyzeBtn" onclick="analisar()">Analisar</button>
+
+    <div class="q-progress">
+      <div class="q-progress-top">
+        <span class="q-progress-label" id="qProgressLabel">Pergunta 1 de 10</span>
+        <span class="q-progress-remaining" id="qProgressRemaining">faltam 9</span>
+      </div>
+      <div class="q-progress-bar">
+        <div class="q-progress-fill" id="qProgressFill"></div>
+      </div>
     </div>
+
+    <div class="question-single" id="questionSingle"></div>
   </section>
 
   <!-- Tela 3: resultado -->
@@ -191,7 +210,7 @@
 </div>
 
 <script>
-// Perguntas exibidas na tela 2 — chave do fato : texto da pergunta
+// Perguntas exibidas na tela 2, uma de cada vez — chave do fato : texto da pergunta
 const PERGUNTAS = [
   ["folhas_amareladas", "Há folhas amareladas?"],
   ["folhas_secas", "Há folhas secas?"],
@@ -240,29 +259,45 @@ const REGRAS = [
 ];
 
 let fatos = {};
+let currentScreen = 0;
+let currentQ = 0;
+const totalQ = PERGUNTAS.length;
 
-function renderPerguntas(){
-  const list = document.getElementById("questionList");
-  list.innerHTML = "";
-  PERGUNTAS.forEach(([chave, texto]) => {
-    if (fatos[chave] === undefined) fatos[chave] = false;
-    const row = document.createElement("div");
-    row.className = "question";
-    row.innerHTML = `
-      <span>${texto}</span>
-      <div class="toggle">
-        <button class="on-yes ${fatos[chave] ? 'selected' : ''}" data-chave="${chave}" data-val="true">SIM</button>
-        <button class="on-no ${!fatos[chave] ? 'selected' : ''}" data-chave="${chave}" data-val="false">NÃO</button>
-      </div>`;
-    list.appendChild(row);
-  });
-  list.querySelectorAll("button").forEach(btn => {
+function renderQuestion(){
+  const [chave, texto] = PERGUNTAS[currentQ];
+
+  // barra de progresso: quantas perguntas já foram respondidas / faltam
+  const pct = Math.round((currentQ / totalQ) * 100);
+  document.getElementById("qProgressFill").style.width = pct + "%";
+  document.getElementById("qProgressLabel").textContent = `Pergunta ${currentQ + 1} de ${totalQ}`;
+  const restantes = totalQ - currentQ - 1;
+  document.getElementById("qProgressRemaining").textContent =
+    restantes > 0 ? `faltam ${restantes}` : "última pergunta";
+
+  const container = document.getElementById("questionSingle");
+  container.innerHTML = `
+    <div class="q-text">${texto}</div>
+    <div class="q-answer-btns">
+      <button class="yes" data-val="true">Sim</button>
+      <button class="no" data-val="false">Não</button>
+    </div>`;
+
+  container.querySelectorAll("button").forEach(btn => {
     btn.addEventListener("click", () => {
-      const chave = btn.dataset.chave;
       fatos[chave] = btn.dataset.val === "true";
-      renderPerguntas();
+      avancarPergunta();
     });
   });
+}
+
+function avancarPergunta(){
+  if (currentQ < totalQ - 1){
+    currentQ++;
+    renderQuestion();
+    updateBackButton();
+  } else {
+    analisar();
+  }
 }
 
 function analisar(){
@@ -291,20 +326,39 @@ function analisar(){
 
 function reiniciar(){
   fatos = {};
-  renderPerguntas();
   goTo(0);
 }
 
+function updateBackButton(){
+  const backBtn = document.getElementById("backBtn");
+  if (currentScreen === 1 && currentQ > 0){
+    // dentro do questionário: volta para a pergunta anterior
+    backBtn.disabled = false;
+    backBtn.onclick = () => {
+      currentQ--;
+      renderQuestion();
+      updateBackButton();
+    };
+  } else {
+    backBtn.disabled = currentScreen === 0;
+    backBtn.onclick = () => goTo(Math.max(0, currentScreen - 1));
+  }
+}
+
 function goTo(index){
+  currentScreen = index;
   document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
   document.querySelector(`.screen[data-screen="${index}"]`).classList.remove("hidden");
   document.querySelectorAll(".dot").forEach(d => d.classList.toggle("active", Number(d.dataset.dot) <= index));
-  document.getElementById("backBtn").disabled = index === 0;
-  document.getElementById("backBtn").onclick = () => goTo(Math.max(0, index - 1));
-  if (index === 1) renderPerguntas();
+
+  if (index === 1){
+    currentQ = 0;
+    renderQuestion();
+  }
+  updateBackButton();
 }
 
-renderPerguntas();
+updateBackButton();
 </script>
 </body>
 </html>
